@@ -9,6 +9,8 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
+app.set('port', process.env.PORT || 3000);
+
 io.on('connection', (socket) => {
     console.log('a user connected');
     socket.on('chat message', (msg) => {
@@ -27,6 +29,6 @@ io.on('connection', (socket) => {
     });
   });
 
-server.listen(3000, () => {
+server.listen(app.get('port'), () => {
   console.log('listening on *:3000');
 });
