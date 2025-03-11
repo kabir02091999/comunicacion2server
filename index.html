@@ -5,86 +5,132 @@
     <style>
       body {
         font-family: 'Arial', sans-serif;
-        background-color: #1a1a1a; /* Fondo oscuro */
+        background-color: #1a1a1a;
         margin: 0;
         padding: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
-        color: #e0e0e0; /* Color de texto claro */
+        color: #e0e0e0;
+      }
+
+      .chat-container {
+        width: 100%;
+        max-width: 600px;
+        background-color: #2d2d2d;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 80vh;
       }
 
       #messages {
         list-style-type: none;
         margin: 0;
-        padding: 0;
-        width: 100%;
-        max-width: 600px;
-        height: 400px;
-        overflow-y: auto;
-        background-color: #2d2d2d; /* Fondo oscuro para la lista de mensajes */
-        border-radius: 10px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Sombra más oscura */
         padding: 20px;
-        margin-bottom: 20px;
+        overflow-y: auto;
+        flex: 1;
       }
 
       #messages li {
         padding: 10px 15px;
         margin-bottom: 10px;
-        background-color: #3a3a3a; /* Fondo oscuro para los mensajes */
         border-radius: 20px;
         max-width: 70%;
         word-wrap: break-word;
-        color: #e0e0e0; /* Color de texto claro */
+        position: relative;
       }
 
-      #messages li:nth-child(odd) {
-        background-color: #007bff; /* Color azul para los mensajes del usuario */
+      #messages li.self {
+        background-color: #007bff;
         color: white;
         align-self: flex-end;
         margin-left: auto;
       }
 
-      #form {
-        display: flex;
-        width: 100%;
-        max-width: 600px;
+      #messages li.other {
+        background-color: #3a3a3a;
+        color: #e0e0e0;
+        align-self: flex-start;
       }
 
-      #input {
+      #messages li.self::before {
+        content: '';
+        position: absolute;
+        right: -10px;
+        top: 10px;
+        border-width: 10px 0 10px 10px;
+        border-style: solid;
+        border-color: transparent transparent transparent #007bff;
+      }
+
+      #messages li.other::before {
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: 10px;
+        border-width: 10px 10px 10px 0;
+        border-style: solid;
+        border-color: transparent #3a3a3a transparent transparent;
+      }
+
+      #form {
+        display: flex;
+        padding: 10px;
+        background-color: #3a3a3a;
+      }
+
+      #username {
         flex: 1;
         padding: 10px;
-        border: 1px solid #444; /* Borde más oscuro */
+        border: 1px solid #444;
         border-radius: 20px;
         outline: none;
         font-size: 16px;
-        background-color: #2d2d2d; /* Fondo oscuro para el input */
-        color: #e0e0e0; /* Color de texto claro */
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        margin-right: 10px;
+      }
+
+      #input {
+        flex: 2;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 20px;
+        outline: none;
+        font-size: 16px;
+        background-color: #2d2d2d;
+        color: #e0e0e0;
+        margin-right: 10px;
       }
 
       #form button {
         padding: 10px 20px;
-        background-color: #007bff; /* Color azul para el botón */
+        background-color: #007bff;
         color: white;
         border: none;
         border-radius: 20px;
-        margin-left: 10px;
         cursor: pointer;
         font-size: 16px;
       }
 
       #form button:hover {
-        background-color: #0056b3; /* Color azul más oscuro al pasar el mouse */
+        background-color: #0056b3;
       }
     </style>
   </head>
   <body>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
+    <div class="chat-container">
+      <ul id="messages"></ul>
+      <form id="form" action="">
+        <input id="username" placeholder="Your name" autocomplete="off" />
+        <input id="input" placeholder="Type a message" autocomplete="off" />
+        <button>Send</button>
+      </form>
+    </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
@@ -92,20 +138,25 @@
       var messages = document.getElementById('messages');
       var form = document.getElementById('form');
       var input = document.getElementById('input');
+      var usernameInput = document.getElementById('username');
 
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         if (input.value) {
-          socket.emit('chat message', input.value);
+          socket.emit('chat message', {
+            username: usernameInput.value || 'Anonymous',
+            message: input.value
+          });
           input.value = '';
         }
       });
 
-      socket.on('chat message', function(msg) {
+      socket.on('chat message', function(data) {
         var item = document.createElement('li');
-        item.textContent = msg;
+        item.textContent = data.username + ': ' + data.message;
+        item.classList.add(data.username === usernameInput.value ? 'self' : 'other');
         messages.appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
+        messages.scrollTop = messages.scrollHeight;
       });
     </script>
   </body>

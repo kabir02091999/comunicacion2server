@@ -12,22 +12,15 @@ app.get('/', (req, res) => {
 app.set('port', process.env.PORT || 3000);
 
 io.on('connection', (socket) => {
-    console.log('a user connected');
-    socket.on('chat message', (msg) => {
-        console.log('message: ' + msg);
-      });
-    socket.on('disconnect', () => {
-      console.log('user disconnected');
-    });
+  console.log('a user connected');
+  socket.on('chat message', (data) => {
+    console.log('message: ' + data.message + ' from ' + data.username);
+    io.emit('chat message', data);
   });
-
-  io.emit('some event', { someProperty: 'some value', otherProperty: 'other value' }); // This will emit the event to all connected sockets
-
-  io.on('connection', (socket) => {
-    socket.on('chat message', (msg) => {
-      io.emit('chat message', msg);
-    });
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
   });
+});
 
 server.listen(app.get('port'), () => {
   console.log('listening on *:3000');
